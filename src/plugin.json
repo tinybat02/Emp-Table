@@ -1,0 +1,25 @@
+{
+  "type": "panel",
+  "name": "Emp Table",
+  "id": "id-employee-table-schedule",
+  "dataFormats": ["table"],
+  "info": {
+    "description": "Employee Table",
+    "author": {
+      "name": "Nam Le"
+    },
+    "keywords": [],
+    "logos": {
+      "small": "img/emp-table.svg",
+      "large": "img/emp-table.svg"
+    },
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+
+  "dependencies": {
+    "grafanaVersion": "6.3.x",
+    "plugins": []
+  }
+}
