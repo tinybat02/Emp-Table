@@ -43614,7 +43614,9 @@ function (_super) {
 
     _this.state = {
       data: null,
-      keys: []
+      keys: [],
+      polygonIds: {},
+      persistColor: {}
     };
     return _this;
   }
@@ -43623,13 +43625,17 @@ function (_super) {
     var series = this.props.data.series;
     if (series.length == 0) return;
 
-    var _a = Object(_utils_helpFunc__WEBPACK_IMPORTED_MODULE_3__["processData"])(series[0].fields[0].values.buffer),
+    var _a = Object(_utils_helpFunc__WEBPACK_IMPORTED_MODULE_3__["processData"])(series[0].fields[0].values.buffer, {}),
         data = _a.data,
-        keys = _a.keys;
+        keys = _a.keys,
+        polygonIds = _a.polygonIds,
+        persistColor = _a.persistColor;
 
     this.setState({
       data: data,
-      keys: keys
+      keys: keys,
+      polygonIds: polygonIds,
+      persistColor: persistColor
     });
   };
 
@@ -43638,20 +43644,26 @@ function (_super) {
       var series = this.props.data.series;
 
       if (series.length == 0) {
-        this.setState({
-          data: null,
-          keys: []
+        this.setState(function (prev) {
+          return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__assign"])(Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__assign"])({}, prev), {
+            data: null,
+            keys: []
+          });
         });
         return;
       }
 
-      var _a = Object(_utils_helpFunc__WEBPACK_IMPORTED_MODULE_3__["processData"])(series[0].fields[0].values.buffer),
+      var _a = Object(_utils_helpFunc__WEBPACK_IMPORTED_MODULE_3__["processData"])(series[0].fields[0].values.buffer, this.state.persistColor),
           data = _a.data,
-          keys = _a.keys;
+          keys = _a.keys,
+          polygonIds = _a.polygonIds,
+          persistColor = _a.persistColor;
 
       this.setState({
         data: data,
-        keys: keys
+        keys: keys,
+        polygonIds: polygonIds,
+        persistColor: persistColor
       });
     }
   };
@@ -43662,12 +43674,31 @@ function (_super) {
         height = _a.height;
     var _b = this.state,
         data = _b.data,
-        keys = _b.keys;
+        keys = _b.keys,
+        polygonIds = _b.polygonIds,
+        persistColor = _b.persistColor;
 
     if (!data) {
       return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", null, "No Data");
     }
 
+    var colors = data.map(function (item) {
+      return keys.map(function (key) {
+        return item[key + "Color"];
+      });
+    }).flat();
+
+    function scale() {}
+
+    scale.domain = function () {
+      var _colors = colors.slice(0);
+
+      return function () {
+        return _colors.shift();
+      };
+    };
+
+    console.log('persist Color ', persistColor);
     return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
       style: {
         width: width,
@@ -43715,7 +43746,6 @@ function (_super) {
         from: 'color',
         modifiers: [['darker', 1.8]]
       },
-      colors: "blues",
       // @ts-ignore
       fill: [{
         id: 'lines'
@@ -43723,8 +43753,41 @@ function (_super) {
       animate: true,
       motionStiffness: 80,
       motionDamping: 9,
-      cellHoverOthersOpacity: 0.25
-    }));
+      cellHoverOthersOpacity: 0.25,
+      tooltip: function tooltip(_a) {
+        var xKey = _a.xKey,
+            yKey = _a.yKey,
+            value = _a.value,
+            color = _a.color;
+        return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("strong", {
+          style: {
+            color: color
+          }
+        }, yKey, " - ", xKey, ": ", polygonIds[value]);
+      },
+      //@ts-ignore
+      colors: scale
+    }), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("section", {
+      style: {
+        position: 'absolute',
+        top: 0,
+        right: 15
+      }
+    }, Object.keys(persistColor).map(function (polygon) {
+      return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("svg", {
+        xmlns: "http://www.w3.org/2000/svg",
+        version: "1.1",
+        fill: persistColor[polygon],
+        style: {
+          width: 10,
+          height: 10,
+          marginRight: 5
+        }
+      }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("rect", {
+        width: "20",
+        height: "20"
+      })), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("span", null, polygon), ' ');
+    })));
   };
 
   return MainPanel;
@@ -43784,30 +43847,63 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "processData", function() { return processData; });
 /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "../node_modules/tslib/tslib.es6.js");
 
-var processData = function processData(buffer) {
-  var begin = Math.min.apply(Math, Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__spread"])(buffer.map(function (item) {
-    return item.start_hour;
-  })));
-  var end = Math.max.apply(Math, Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__spread"])(buffer.map(function (item) {
-    return item.end_hour;
-  })));
+
+var generateColor = function generateColor() {
+  return '#' + Math.floor(Math.random() * 16777215).toString(16);
+};
+
+var processData = function processData(buffer, persistColor) {
+  var hours = buffer.map(function (item) {
+    return item.hour;
+  });
+  var begin = Math.min.apply(Math, Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__spread"])(hours));
+  var end = Math.max.apply(Math, Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__spread"])(hours));
   var keys = Array(end - begin + 1).fill(0).map(function (_, idx) {
     return begin + idx;
   });
-  var data = buffer.map(function (item) {
-    var obj = {
-      id: item.customer
-    };
+  var template = keys.reduce(function (obj, value) {
+    obj[value] = null;
+    obj[value + "Color"] = '#fff';
+    return obj;
+  }, {});
+  var all_hash = {};
+  var polygonLabels = [];
 
-    for (var i = begin; i <= end; i++) {
-      if (i >= item.start_hour && i <= item.end_hour) obj[i] = 1;else obj[i] = 0;
+  var hashColors = Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__assign"])({}, persistColor);
+
+  buffer.map(function (item) {
+    if (!all_hash[item.hash_id]) all_hash[item.hash_id] = Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__assign"])(Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__assign"])({}, template), {
+      id: item.hash_id
+    });
+    var assignedColor = hashColors[item.polygon] || '#fff';
+
+    if (!polygonLabels.includes(item.polygon)) {
+      polygonLabels.push(item.polygon);
+
+      if (!hashColors[item.polygon]) {
+        assignedColor = generateColor();
+        hashColors[item.polygon] = assignedColor;
+      }
     }
 
-    return obj;
+    var index = polygonLabels.findIndex(function (v) {
+      return v == item.polygon;
+    });
+    all_hash[item.hash_id][item.hour] = index;
+    all_hash[item.hash_id][item.hour + "Color"] = assignedColor;
   });
+  var data = Object.values(all_hash);
+  var polygonIds = polygonLabels.reduce(function (obj, polygon, i, arr) {
+    obj[i] = polygon;
+    return obj;
+  }, {});
+  console.log('polygonIds ', polygonIds);
+  console.log('hashColors ', hashColors);
   return {
     data: data,
-    keys: keys
+    keys: keys,
+    polygonIds: polygonIds,
+    persistColor: hashColors
   };
 };
 

@@ -5,7 +5,7 @@ export interface PanelOptions {}
 export const defaults: PanelOptions = {};
 
 interface Buffer extends Vector {
-  buffer: { customer: string; start_hour: number; end_hour: number }[];
+  buffer: { hash_id: string; polygon: string; hour: number }[];
 }
 
 export interface FieldBuffer extends Field<any, Vector> {

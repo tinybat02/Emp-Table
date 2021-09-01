@@ -9,12 +9,16 @@ interface Props extends PanelProps<PanelOptions> {}
 interface State {
   data: Array<{ [key: string]: string | number }> | null;
   keys: string[];
+  polygonIds: { [key: string]: string };
+  persistColor: { [key: string]: string };
 }
 
 export class MainPanel extends PureComponent<Props> {
   state: State = {
     data: null,
     keys: [],
+    polygonIds: {},
+    persistColor: {},
   };
 
   componentDidMount() {
@@ -22,30 +26,47 @@ export class MainPanel extends PureComponent<Props> {
 
     if (series.length == 0) return;
 
-    const { data, keys } = processData(series[0].fields[0].values.buffer);
-    this.setState({ data, keys });
+    const { data, keys, polygonIds, persistColor } = processData(series[0].fields[0].values.buffer, {});
+    this.setState({ data, keys, polygonIds, persistColor });
   }
 
   componentDidUpdate(prevProps: Props) {
     if (prevProps.data.series !== this.props.data.series) {
       const series = this.props.data.series as Frame[];
       if (series.length == 0) {
-        this.setState({ data: null, keys: [] });
+        this.setState(prev => ({ ...prev, data: null, keys: [] }));
         return;
       }
-      const { data, keys } = processData(series[0].fields[0].values.buffer);
-      this.setState({ data, keys });
+
+      const { data, keys, polygonIds, persistColor } = processData(
+        series[0].fields[0].values.buffer,
+        this.state.persistColor
+      );
+      this.setState({ data, keys, polygonIds, persistColor });
     }
   }
 
   render() {
     const { width, height } = this.props;
-    const { data, keys } = this.state;
+    const { data, keys, polygonIds, persistColor } = this.state;
 
     if (!data) {
       return <div>No Data</div>;
     }
 
+    const colors = data.map(item => keys.map(key => item[`${key}Color`])).flat();
+
+    function scale() {}
+
+    scale.domain = () => {
+      const _colors = colors.slice(0);
+
+      return () => {
+        return _colors.shift();
+      };
+    };
+
+    console.log('persist Color ', persistColor);
     return (
       <div
         style={{
@@ -84,14 +105,37 @@ export class MainPanel extends PureComponent<Props> {
           cellOpacity={0.7}
           cellBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
           labelTextColor={{ from: 'color', modifiers: [['darker', 1.8]] }}
-          colors="blues"
           // @ts-ignore
           fill={[{ id: 'lines' }]}
           animate={true}
           motionStiffness={80}
           motionDamping={9}
           cellHoverOthersOpacity={0.25}
+          tooltip={({ xKey, yKey, value, color }) => (
+            <strong style={{ color }}>
+              {yKey} - {xKey}: {polygonIds[value]}
+            </strong>
+          )}
+          //@ts-ignore
+          colors={scale}
         />
+        <section style={{ position: 'absolute', top: 0, right: 15 }}>
+          {Object.keys(persistColor).map(polygon => {
+            return (
+              <div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  version="1.1"
+                  fill={persistColor[polygon]}
+                  style={{ width: 10, height: 10, marginRight: 5 }}
+                >
+                  <rect width="20" height="20" />
+                </svg>
+                <span>{polygon}</span>{' '}
+              </div>
+            );
+          })}
+        </section>
       </div>
     );
   }
