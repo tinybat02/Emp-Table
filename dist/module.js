@@ -43615,7 +43615,6 @@ function (_super) {
     _this.state = {
       data: null,
       keys: [],
-      polygonIds: {},
       persistColor: {}
     };
     return _this;
@@ -43628,13 +43627,11 @@ function (_super) {
     var _a = Object(_utils_helpFunc__WEBPACK_IMPORTED_MODULE_3__["processData"])(series[0].fields[0].values.buffer, {}),
         data = _a.data,
         keys = _a.keys,
-        polygonIds = _a.polygonIds,
         persistColor = _a.persistColor;
 
     this.setState({
       data: data,
       keys: keys,
-      polygonIds: polygonIds,
       persistColor: persistColor
     });
   };
@@ -43656,13 +43653,11 @@ function (_super) {
       var _a = Object(_utils_helpFunc__WEBPACK_IMPORTED_MODULE_3__["processData"])(series[0].fields[0].values.buffer, this.state.persistColor),
           data = _a.data,
           keys = _a.keys,
-          polygonIds = _a.polygonIds,
           persistColor = _a.persistColor;
 
       this.setState({
         data: data,
         keys: keys,
-        polygonIds: polygonIds,
         persistColor: persistColor
       });
     }
@@ -43675,7 +43670,6 @@ function (_super) {
     var _b = this.state,
         data = _b.data,
         keys = _b.keys,
-        polygonIds = _b.polygonIds,
         persistColor = _b.persistColor;
 
     if (!data) {
@@ -43698,7 +43692,6 @@ function (_super) {
       };
     };
 
-    console.log('persist Color ', persistColor);
     return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
       style: {
         width: width,
@@ -43754,17 +43747,6 @@ function (_super) {
       motionStiffness: 80,
       motionDamping: 9,
       cellHoverOthersOpacity: 0.25,
-      tooltip: function tooltip(_a) {
-        var xKey = _a.xKey,
-            yKey = _a.yKey,
-            value = _a.value,
-            color = _a.color;
-        return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("strong", {
-          style: {
-            color: color
-          }
-        }, yKey, " - ", xKey, ": ", polygonIds[value]);
-      },
       //@ts-ignore
       colors: scale
     }), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("section", {
@@ -43893,16 +43875,9 @@ var processData = function processData(buffer, persistColor) {
     all_hash[item.hash_id][item.hour + "Color"] = assignedColor;
   });
   var data = Object.values(all_hash);
-  var polygonIds = polygonLabels.reduce(function (obj, polygon, i, arr) {
-    obj[i] = polygon;
-    return obj;
-  }, {});
-  console.log('polygonIds ', polygonIds);
-  console.log('hashColors ', hashColors);
   return {
     data: data,
     keys: keys,
-    polygonIds: polygonIds,
     persistColor: hashColors
   };
 };

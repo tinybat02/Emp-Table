@@ -9,7 +9,6 @@ interface Props extends PanelProps<PanelOptions> {}
 interface State {
   data: Array<{ [key: string]: string | number }> | null;
   keys: string[];
-  polygonIds: { [key: string]: string };
   persistColor: { [key: string]: string };
 }
 
@@ -17,7 +16,6 @@ export class MainPanel extends PureComponent<Props> {
   state: State = {
     data: null,
     keys: [],
-    polygonIds: {},
     persistColor: {},
   };
 
@@ -26,8 +24,8 @@ export class MainPanel extends PureComponent<Props> {
 
     if (series.length == 0) return;
 
-    const { data, keys, polygonIds, persistColor } = processData(series[0].fields[0].values.buffer, {});
-    this.setState({ data, keys, polygonIds, persistColor });
+    const { data, keys, persistColor } = processData(series[0].fields[0].values.buffer, {});
+    this.setState({ data, keys, persistColor });
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -38,17 +36,14 @@ export class MainPanel extends PureComponent<Props> {
         return;
       }
 
-      const { data, keys, polygonIds, persistColor } = processData(
-        series[0].fields[0].values.buffer,
-        this.state.persistColor
-      );
-      this.setState({ data, keys, polygonIds, persistColor });
+      const { data, keys, persistColor } = processData(series[0].fields[0].values.buffer, this.state.persistColor);
+      this.setState({ data, keys, persistColor });
     }
   }
 
   render() {
     const { width, height } = this.props;
-    const { data, keys, polygonIds, persistColor } = this.state;
+    const { data, keys, persistColor } = this.state;
 
     if (!data) {
       return <div>No Data</div>;
@@ -66,7 +61,6 @@ export class MainPanel extends PureComponent<Props> {
       };
     };
 
-    console.log('persist Color ', persistColor);
     return (
       <div
         style={{
@@ -111,11 +105,6 @@ export class MainPanel extends PureComponent<Props> {
           motionStiffness={80}
           motionDamping={9}
           cellHoverOthersOpacity={0.25}
-          tooltip={({ xKey, yKey, value, color }) => (
-            <strong style={{ color }}>
-              {yKey} - {xKey}: {polygonIds[value]}
-            </strong>
-          )}
           //@ts-ignore
           colors={scale}
         />

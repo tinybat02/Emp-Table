@@ -42,13 +42,5 @@ export const processData = (
 
   const data = Object.values(all_hash);
 
-  const polygonIds = polygonLabels.reduce((obj: { [key: string]: string }, polygon, i, arr) => {
-    obj[i] = polygon;
-    return obj;
-  }, {});
-
-  console.log('polygonIds ', polygonIds);
-  console.log('hashColors ', hashColors);
-
-  return { data, keys, polygonIds, persistColor: hashColors };
+  return { data, keys, persistColor: hashColors };
 };
